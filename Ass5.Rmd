@@ -1,0 +1,215 @@
+---
+title: "Ass5"
+author: "Kat Leigh"
+date: "12/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+# apply packages and read in data
+
+library(tidyverse)
+library(tidyr)
+library(janitor)
+library(kableExtra)
+library(ggplot2)
+library(ggbeeswarm)
+
+raw_verts <- read.csv("mack_creek_vertebrates.csv") %>% 
+  clean_names()
+
+```
+
+Results A: Visually compare annual salamander counts in old growth (OG) and clear cut (CC) sections of Mack Creek. For all years when Pacific giant salamander observations were recorded in the study, find the total annual Pacific giant salamander counts for the two sections of Mack Creek. Create a finalized graph to show the changes in annual counts for each section over time, add a figure caption, and briefly describe the trends in text.
+
+```{r}
+# get rid of salmon data
+
+raw_sal <- raw_verts %>% 
+  filter(species != "ONCL")
+
+# just get counts for species in OG and CC sections
+
+ct_sal_OG_CC <- raw_sal %>%
+  group_by(section, year) %>% 
+  count(species)
+
+levels(ct_sal_OG_CC$section) <- c("Clearcut", "Oldgrowth")
+
+#visualize the above
+
+ggplot(ct_sal_OG_CC, aes(x= year, y= n))+
+  geom_point(aes(color = species), show.legend = FALSE)+
+  facet_wrap(~section)+
+  labs(x = "Year",
+       y = "Number of Salamanders",
+       title = "Annual Salamander Counts, Clearcut vs. Oldgrowth Sections of Mack Creek")+
+  theme_light()
+
+# focus just on years w/ Pac Sals; get annual counts
+
+ct_Pac_sal_OG_CC <- ct_sal_OG_CC %>% 
+  filter(species %in% "DITE")
+
+# vizualize the above
+
+ggplot(ct_Pac_sal_OG_CC, aes(x= year, y= n))+
+  geom_point(aes(color = section), show.legend = FALSE)+
+  labs(x = "Year",
+       y = "Number of Salamanders",
+       title = "Annual Pacific Giant Salamander Counts, \nClearcut vs. Oldgrowth Sections of Mack Creek") + theme_light() +
+  scale_y_continuous(limits = c(0,400), expand = c(0, 0))
+```
+
+
+Results B: Table of 2017 salamander counts by channel classification (pool, cascades and side-channel) in old growth (OG) and clear cut (CC) sections of Mack Creek. Using only Pacific giant salamander observations from 2017, create a finalized table showing the counts and proportions of salamanders observed in different channel classifications (pool, cascade, or side-channel) within Mack Creek for the two sections (OG and CC). Add a table caption above the table. Note: We’re only interested in Pacific giant salamanders observed in the creek, so you should exclude salamanders observed in isolated pools (IP) disconnected from the channel.
+
+```{r}
+# just get count data for Pac Sal in 2017
+
+Pac_Sal_17t <- raw_sal %>% 
+  filter(species %in% "DITE",
+         year %in% "2017") %>% 
+  filter(unittype != "IP") %>% 
+  group_by(section, unittype) %>%
+  count(name = "total")
+
+levels(Pac_Sal_17t$section) <- c("Clearcut", "Oldgrowth")
+
+Table_sal_17 <- Pac_Sal_17t %>% 
+  pivot_wider(names_from = unittype, values_from = total)
+  
+# add proportions
+
+Table_sal_17_props <- Table_sal_17 %>% 
+  adorn_percentages(denominator = "row") %>% 
+  adorn_pct_formatting(digits = 1) %>% 
+  adorn_ns(position = "front")
+
+# create nice table
+Table_sal_17_nice <- Table_sal_17_props %>% kable(col.names = c("Section",
+                    "Cascade",
+                    "Pools",
+                    "Side Channel"),
+      caption = "Table 1: Pacific giant salamanders found in 2017 for three Channel classifications in oldgrowth and clearcut sections of Mack Creek. Percentages shown in paratheses.") %>%
+kable_styling(bootstrap_options = "striped",
+              full_width = F,
+              position = "left"
+              ) %>%
+add_header_above(c("Salamander Counts and Percentages" = 4))
+
+Table_sal_17_nice
+
+```
+
+
+Results C: Using the 2017 counts found in Results B above, answer: is there a significant difference in where in the channel Pacific giant salamanders are located (pool, cascade or side channel) between the two sections (old growth and clear cut)? Another way to ask this: Regarding the locations where salamanders were observed in Mack Creek in 2017, is there a significant effect of forest condition (old growth or clear cut) on where in the channel salamanders are found (channel classification)? Report your statistical findings in text, in the context of the actual counts / proportions you present in the table. 
+
+```{r}
+# run a chi squared test to figure out if OG and CC are sig diff from each other.
+
+cont_tbl <- Table_sal_17 %>% 
+  column_to_rownames('section')
+
+cont_tbl
+
+chi_sqr <- chisq.test(cont_tbl)
+
+chi_sqr
+
+```
+
+
+no sig. diff in the 2 groupings. p-value: `r round(chi_sqr$p.value, 3) `. 
+
+Results D. Compare weights of Pacific giant salamanders in clear cut and old growth forest sections of the creek in 2017. Only considering creek section (OG or CC) as a variable (not further factoring by channel classification), answer: Is there a significant difference in mean weights for Pacific giant salamanders observed in the two forest sections (clear cut and old growth) in 2017? 
+
+```{r}
+# just get weights for Pac Sal in 2017 by OG and CC
+
+pac_sal_weight_17 <- raw_sal %>% 
+  filter(year %in% "2017",
+         species %in% "DITE") %>% 
+  group_by(section) %>%
+  select(section, weight)
+
+  # summarise(mean = mean(weight, na.rm = TRUE))
+
+CC <- pac_sal_weight_17 %>% 
+  filter(section %in% "CC")
+
+OG <- pac_sal_weight_17 %>% 
+  filter(section %in% "OG")
+
+ttest_pac_sal_w_17 <- t.test(OG$weight, CC$weight)
+
+ttest_pac_sal_w_17
+
+```
+
+no sig. diff btw OG and CC. p-value = `r round(ttest_pac_sal_w_17$p.value,3)`. Mean OG = `r round(ttest_pac_sal_w_17$estimate[1],3)`. Mean CC = `r round(ttest_pac_sal_w_17$estimate[2],3)`.
+
+```{r}
+# vizualize above
+
+```
+
+
+Results E. Compare weights of Pacific giant salamanders in pools, cascades and side-channels of Mack Creek in 2017. Pool salamander observations from both the old growth and clear cut sections for this part (i.e., you will not consider “section” as a factor here).
+
+```{r}
+Pac_sal_weight_17_unittype <- raw_sal %>% 
+  filter(year %in% "2017",
+         species %in% "DITE",
+         unittype != "IP") %>% 
+  group_by(unittype)%>% 
+  select(c(unittype,weight))
+```
+
+First, visually compare Pacific giant salamander weights between the three channel classifications. You can choose how to best visualize the weights between the three groups (Beeswarm? Jitter? Histogram? Density? Something else?), but you should indicate values for the mean, and standard deviation, standard error or a 95% confidence interval. Add a figure caption. 
+
+```{r}
+# visulize data
+ggplot(Pac_sal_weight_17_unittype, aes(x=unittype, y=weight))+
+  geom_beeswarm(aes(color=weight))
+
+```
+
+Second, answer: Is there a significant difference in mean weights for Pacific giant salamanders observed in pools vs. cascades vs. side-channels in 2017? Describe the results of your statistical analysis in text, within the context of broader (and more important) measures of differences between groups (some options: means differences, effect sizes, percent differences, etc). 
+
+```{r}
+anova_weight_unittype <- aov(weight~unittype, data = Pac_sal_weight_17_unittype)
+anova_weight_unittype
+
+aov_outputs <- unlist(summary(anova_weight_unittype))
+
+
+weight_C <- Pac_sal_weight_17_unittype %>% 
+  filter(unittype %in% "C")
+  weight_P <- Pac_sal_weight_17_unittype %>% 
+  filter(unittype %in% "P")
+  weight_SC <- Pac_sal_weight_17_unittype %>% 
+  filter(unittype %in% "SC")
+
+sum_w_C <- summary(weight_C$weight)
+sum_w_P <- summary(weight_P$weight)
+sum_w_SC <- summary(weight_SC$weight)
+
+# seeing which means are diff
+
+tukey <- TukeyHSD(anova_weight_unittype)
+tukey
+
+tukey_outputs <- unlist(tukey)
+tukey_outputs
+
+```
+
+the AOV indicates there is a sig. diff. btw the three channel classifications p-value = `r round(aov_outputs[9],3)`. Mean cascade = `r round(sum_w_C[4],3)`, Mean pool = `r round(sum_w_P[4],3)`, Mean side channel = `r round(sum_w_SC[4],3)`.
+
+However, a TukeyHSD indicates only the pairwise comparison of chennel classifications side channel to pool shows a significant difference in means, p-value = `r round(tukey_outputs[12],3)`. All other means do not differ significantly from each other (i.e. pool to cascade or side channel to cascade).
+
+
+Third, describe any concerns you have about comparing means across the groups. What might be another option to consider moving forward with the analysis? (You don’t need to actually do that here, just describe briefly in 1-2 sentences.)
