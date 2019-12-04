@@ -10,6 +10,7 @@ output: html_document
 The Pacific Giant Salamander (*Dicamptodon tenebrosus*) is found in mountain streams in the coastal ranges of Southern British Columbia, Oregon and Northern California. While this species is not threatened or endangered, it is particularly sensitive to logging and requires clean water to thrive (Oregon Wild 2019). Since 1993, this species has been monitored as part of the Aquatic Vertebrate Population Study at Mack Creek in the H. J. Andrews Experimental Forest in Oregon. Samples were captured using 2-pass electrofishing, and then measured and weighed. The site is divided into two sections, an area that was clear cut in the early 1960s and an old growth coniferous forest. The creek also has a variety of different channel classifications where aquatic vertebrates were observed, including cascades, pools and side channels (Gregory 2016). This report explores the data collected by Gregory (2016) to compare the counts and weights of salamander populations found in different areas of Mack Creek. 
 
 ![](salamander_pic.jpg)
+<br/>
 _**Figure 1.** Pacific Giant Salamander. Credit: [Gary Nafis, www.californiaherps.com](http://www.californiaherps.com/salamanders/images/dtenebrosusfchu3082.jpg)_
 
 ## Data and Methods
@@ -93,6 +94,7 @@ ggplot(ct_sal_OG_CC, aes(x= year, y= n))+
 #   scale_y_continuous(limits = c(0,400), expand = c(0, 0))
 ```
 
+<br/>
 _**Figure 2.** Annual counts of Pacific Giant Salamanders from 1993 - 2017 in clear cut and old growth sections of Mack Creek. The orange line indicates salamander counts in the clear cut section and the blue line indicates salamander counts in the old growth section._
 
 ### B. Salamander counts by channel classification in old growth and clear cut sections of Mack Creek in 2017
@@ -237,6 +239,7 @@ ggplot() +
        y = "Weight (grams)")+
   theme_bw()
 ```
+<br/>
 _**Figure 3.** Pacific Giant Salamander Weights observed in clear cut and old growth forest sections of Mack Creek in 2017. Teal points indicate observed values and error bars indicate the standard error. Black points indicate the mean in clear cut ((`r round(sal_weight_summary$mean_weight[1],2)` ± `r round(sal_weight_summary$sd_weight[1], 2)` g, n = `r round(sal_weight_summary$sample_size[1], 2)`) and old growth (`r round(sal_weight_summary$mean_weight[2],2)` ± `r round(sal_weight_summary$sd_weight[2], 2)` g, n = `r round(sal_weight_summary$sample_size[2], 2)`) sections of the creek._ 
 
 ### E. Salamander weights by channel classification
@@ -300,6 +303,8 @@ ggplot() +
 
 
 ```
+
+<br/>
 _**Figure 4.** Pacific Giant Salamander weights observed in different channel classifications of Mack Creek in 2017. Teal points indicate observed values and error bars indicate the standard error. Black points indicate the mean at cascades (`r round(sal_unittype_summary$mean_weight[1],2)` ± `r round(sal_unittype_summary$sd_weight[1], 2)` g, n = `r round(sal_unittype_summary$sample_size[1], 2)`), pools (`r round(sal_unittype_summary$mean_weight[2],2)` ± `r round(sal_unittype_summary$sd_weight[2], 2)` g, n = `r round(sal_unittype_summary$sample_size[2], 2)`) and side channels (`r round(sal_unittype_summary$mean_weight[3],2)` ± `r round(sal_unittype_summary$sd_weight[3], 2)` g, n = `r round(sal_unittype_summary$sample_size[3], 2)`)._
 
 ```{r}
